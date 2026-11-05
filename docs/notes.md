@@ -17,7 +17,7 @@
 
 > VBAT 无电池，所以**开机必须联网校时**；只按复位键时 RTC 会保留上次时间（LSE 一直在走）。
 
-**当前占用**：Code 28290 + RO 29622 ≈ 56.6KB / 128KB（44%）；RW 264 + ZI 7328 ≈ 7.4KB / 20KB（37%）。
+**当前占用**：Code 28622 + RO 33486 ≈ 60.9KB / 128KB（48%）；RW 272 + ZI ≈ 7.4KB / 20KB（37%）。
 
 ---
 
@@ -30,9 +30,9 @@
 | 日期行 | `11月2日` + `星期一` |
 | 天气行 | 32×32 图标 + 当前温度 + ℃ + 最高/最低温，**负温用 3px 小负号**，右对齐 |
 | 室内行 | 室内温度 / 湿度，每 1 秒刷新一次 |
-| 最后一行 | 6 页轮播（每页停 4 秒，17 帧横向滚动）：明日天气 / 降水概率 / 感冒 / 紫外线 / 空气 / 舒适度 |
+| 最后一行 | 6 页轮播（每页停 4 秒，17 帧上下滚动，旧页上滑出新页从下推入）：明日天气 / 降水概率 / 感冒 / 紫外线 / 空气 / 舒适度 |
 | 桌宠 | 常驻呼吸 + 随机眨眼 + 随机举爱心（连举三下）+ 整点必举 + 22:00~08:00 睡觉 |
-| 网络刷新 | 实况 20 分钟 / 逐日 6 小时 / 生活指数 24 小时 / 网络校时 24 小时 |
+| 网络刷新 | 实况 10 分钟 / 逐日 6 小时 / 生活指数 24 小时 / 网络校时 24 小时 |
 
 ---
 
@@ -56,8 +56,8 @@ System/       系统层
   rtc.c/.h           RTC + 公历换算（不引 time.h）
   delay.c/.h         微秒/毫秒延时 + 不回绕的 uptime
 Assets/       只读资源
-  Font.h             asc16 / number_24 / hz16（70 字，含自造的“霾”）/ hz24
-  UI_Picture.h       14 个 32×32 天气图标（4bit 索引 + 调色板）+ 48×48 桌宠帧
+  Font.h             asc16 / number_24 / hz16（69 字，含自造的“霾”）/ hz24
+  UI_Picture.h       21 个 32×32 天气图标（4bit 索引 + 调色板，按官方码表排序）+ 48×48 桌宠帧
   Pet_Anim.h         桌宠补丁帧
 user/main.c   开机流程 + 主循环
 ```
@@ -103,7 +103,7 @@ IDLE → CONN → MODE → PROMPT → WAIT → CLOSE → QUIET1 → QUIET2 → E
 
 | 宏 | 值 | 含义 |
 |---|---|---|
-| `SD_NOW_SEC` | 1200 | 实况 20 分钟 |
+| `SD_NOW_SEC` | 600 | 实况 10 分钟 |
 | `SD_DAILY_SEC` | 21600 | 逐日 6 小时 |
 | `SD_LIFE_SEC` | 86400 | 生活指数 24 小时 |
 | `SD_TIME_SEC` | 86400 | 网络校时 24 小时 |
@@ -165,13 +165,11 @@ $p = Start-Process "C:/Keil_v5/UV4/UV4.exe" `
 Get-Content build_log.txt -Encoding Default | Select-Object -Last 8
 ```
 
-判成功看日志里的 `0 Error(s)`。**正常情况下有 1 个警告**——`ESP8266_Close` 保留备用但无人调用（`#177-D`），因此 UV4 退出码是 1，别被吓到。**烧录手动做，不要用 `UV4 -f`。**
+判成功看日志里的 `0 Error(s)`。烧录用 ST-Link 在 Keil 里手动触发。
 
 ### 桩测试（主机上跑，不需要板子）
 
-```bash
-cd .workbuddy/test && sh build.sh
-```
+业务层与硬件隔离，7 个测试 310+ 断言用 gcc 直接编译运行（测试代码未随仓库分发）。
 
 | 测试 | 项数 | 覆盖 |
 |---|---|---|
@@ -183,30 +181,9 @@ cd .workbuddy/test && sh build.sh
 | `test_timesync` | 9 | 校时通道、退避、非阻塞推进 |
 | `test_font` | 163 字模 | 字模完整性（缺 0） |
 
-### 离线预览
-
-| 脚本 | 作用 |
-|---|---|
-| `.workbuddy/tools/preview_screen.py` | 用真字模渲染整屏（布局、负温就靠它定的） |
-| `.workbuddy/tools/preview_row.py` | 渲染 6 页轮播 + 17 帧滚动 |
-| `.workbuddy/tools/icon_render.py` | 渲染 14 个天气图标 |
-| `.workbuddy/tools/snapshot.py` | 改代码前快照到 `.workbuddy/backup/<时间戳>/`（md5 校验） |
-
-### 时序仿真
-
-| 脚本 | 作用 |
-|---|---|
-| `.workbuddy/test/sim_esp.py` | 状态机逐句移植 + 假 ESP 模块，复现过“命令被吞” |
-| `.workbuddy/test/sim_pet.py` | 桌宠调度按 12ms 步进跑 30 小时 |
-| `.workbuddy/test/test_pet_clock.c` | 按 u32 回绕语义验证时基 |
-
 ### 调试串口
 
 把 `App/debug.h` 的 `DEBUG_EN` 改成 1，在 `main` 里临时加一行 `Dbg_Report();`，抓完删掉。`DEBUG_EN=0` 时整个模块编译成空壳，不占 flash。
-
-```bash
-python .workbuddy/tools/serial_log.py COM9 9600 40
-```
 
 ---
 
@@ -216,7 +193,7 @@ python .workbuddy/tools/serial_log.py COM9 9600 40
 2. **冒号不闪** —— 目前常亮。
 3. **生活指数返回 23 项只用 4 项**（感冒 / 紫外线 / 空气 / 舒适度），其余未展示。
 4. **未引用函数占用约 330 字节 flash** —— 工程未开 “One ELF Section per Function”，`Pet_Blink/Bob/Lift/Sleep`、`Lcd_ReadPoint`、`ESP8266_Close` 都在映像里；接受。
-5. **主屏天气图标中“雾”和“霾”共用桶 10**，没有拆分。
+5. **风系（32~36）、大雨系（15~18）各共用一个图标桶**，不细拆；未知码的兜底桶沿用占位图，未换官方 99 号图。
 6. 桌宠的四个阻塞版函数（`Pet_Blink/Bob/Lift/Sleep`）保留未删。
 
 ---
