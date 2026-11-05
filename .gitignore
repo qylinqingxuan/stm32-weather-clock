@@ -1,0 +1,49 @@
+# ---- 私有工作区数据 ----
+.workbuddy/
+
+# ---- 暂不公开（画完再传）----
+pcb/
+
+# ---- 参考资料 ----
+*.docx
+readme.txt
+
+# ---- Keil 编译产物 ----
+程序/Obj/
+程序/Listings/
+*.uvguix.*
+*.uvgui.*
+*.scvd
+*.dep
+*.lnp
+*.crf
+*.o
+*.d
+*.lst
+*.htm
+*.map
+*.axf
+*.hex
+*.bin
+
+# ---- 敏感配置（WiFi 账号密码 / API key）----
+程序/App/secrets.h
+
+# ---- 日志 ----
+*.log
+
+# ---- 系统文件 ----
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# ---- 开发残留 ----
+.vscode/
+*.orig
+*.saved_uv4
+程序/JLink Regs CM3.txt
+程序/JLinkSettings.ini
+程序/QDtech_TFT.uvopt
+程序/keilkill.bat
+程序/build_log*.txt
+程序/flash_log.txt
