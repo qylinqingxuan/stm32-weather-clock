@@ -76,7 +76,7 @@
 
 - 天气/生活指数：[心知天气 API](https://docs.seniverse.com/)
 - 舒适度：自算国标舒适度公式（温度、湿度、风速三输入，定点 ×100 运算）
-- 图标：[心知官方图标包](https://docs.seniverse.com/) 转换生成
+- 图标：[心知官方图标包](https://docs.seniverse.com/api/start/code.html) 转换生成
 
 ## License
 
