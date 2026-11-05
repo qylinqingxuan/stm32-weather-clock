@@ -167,20 +167,6 @@ Get-Content build_log.txt -Encoding Default | Select-Object -Last 8
 
 判成功看日志里的 `0 Error(s)`。烧录用 ST-Link 在 Keil 里手动触发。
 
-### 桩测试（主机上跑，不需要板子）
-
-业务层与硬件隔离，7 个测试 310+ 断言用 gcc 直接编译运行（测试代码未随仓库分发）。
-
-| 测试 | 项数 | 覆盖 |
-|---|---|---|
-| `test_row` | 66 | 6 页内容 + 39 个天气码归并矩阵 |
-| `test_clock` | 17 | 时间行逐位判重 |
-| `test_indoor` | 32 | 室内温湿度两段式采样 |
-| `test_tempfmt` | 13 | 温度格式化 |
-| `test_comfort` | 10 | 舒适度公式与切点 |
-| `test_timesync` | 9 | 校时通道、退避、非阻塞推进 |
-| `test_font` | 163 字模 | 字模完整性（缺 0） |
-
 ### 调试串口
 
 把 `App/debug.h` 的 `DEBUG_EN` 改成 1，在 `main` 里临时加一行 `Dbg_Report();`，抓完删掉。`DEBUG_EN=0` 时整个模块编译成空壳，不占 flash。
